@@ -32,7 +32,9 @@ import (
 
 var k8sCiliumNodesCacheSynced = make(chan struct{})
 
-func startSynchronizingCiliumNodes(nodeManager allocator.NodeEventHandler) {
+// startSynchronizingCiliumNodes waits for the CiliumNode CRD availability and
+// then synchronizes CiliumNode resources.
+func startSynchronizingCiliumNodes(nodeManager allocator.NodeEventHandler) error {
 	log.Info("Starting to synchronize CiliumNode custom resources...")
 
 	// TODO: The operator is currently storing a full copy of the
@@ -40,7 +42,7 @@ func startSynchronizingCiliumNodes(nodeManager allocator.NodeEventHandler) {
 	// introducing a slim version of it.
 	_, ciliumNodeInformer := informer.NewInformer(
 		cache.NewListWatchFromClient(ciliumK8sClient.CiliumV2().RESTClient(),
-			"ciliumnodes", v1.NamespaceAll, fields.Everything()),
+			v2.CNPluralName, v1.NamespaceAll, fields.Everything()),
 		&v2.CiliumNode{},
 		0,
 		cache.ResourceEventHandlerFuncs{
@@ -72,12 +74,17 @@ func startSynchronizingCiliumNodes(nodeManager allocator.NodeEventHandler) {
 		k8s.ConvertToCiliumNode,
 	)
 
+	if err := WaitForCRD(apiextensionsK8sClient, v2.CNName); err != nil {
+		return err
+	}
+
 	go func() {
 		cache.WaitForCacheSync(wait.NeverStop, ciliumNodeInformer.HasSynced)
 		close(k8sCiliumNodesCacheSynced)
 	}()
 
 	go ciliumNodeInformer.Run(wait.NeverStop)
+	return nil
 }
 
 func deleteCiliumNode(nodeManager *allocator.NodeEventHandler, name string) {

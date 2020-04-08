@@ -119,13 +119,15 @@ func startCRDIdentityGC() {
 		})
 }
 
-func startManagingK8sIdentities() {
+// startManagingK8sIdentities waits for the CiliumIdentity CRD availability and
+// then garbage collects CiliumIdentity resources.
+func startManagingK8sIdentities() error {
 	identityHeartbeat = identity.NewIdentityHeartbeatStore(operatorOption.Config.IdentityHeartbeatTimeout)
 
 	identityStore = cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)
 	identityInformer := informer.NewInformerWithStore(
 		cache.NewListWatchFromClient(ciliumK8sClient.CiliumV2().RESTClient(),
-			"ciliumidentities", v1.NamespaceAll, fields.Everything()),
+			v2.CIDPluralName, v1.NamespaceAll, fields.Everything()),
 		&v2.CiliumIdentity{},
 		0,
 		cache.ResourceEventHandlerFuncs{
@@ -169,5 +171,9 @@ func startManagingK8sIdentities() {
 		identityStore,
 	)
 
+	if err := WaitForCRD(apiextensionsK8sClient, v2.CIDName); err != nil {
+		return err
+	}
 	go identityInformer.Run(wait.NeverStop)
+	return nil
 }
