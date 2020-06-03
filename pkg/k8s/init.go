@@ -196,6 +196,10 @@ func GetNodeSpec() error {
 		if option.Config.K8sRequireIPv4PodCIDR || option.Config.K8sRequireIPv6PodCIDR {
 			return fmt.Errorf("node name must be specified via environment variable '%s' to retrieve Kubernetes PodCIDR range", k8sConst.EnvNodeNameSpec)
 		}
+		if option.Config.KubeProxyReplacement != option.KubeProxyReplacementDisabled {
+			log.Info("K8s node name is empty. BPF NodePort might not be able to auto detect " +
+				"devices (if not specified)")
+		}
 		return nil
 	}
 
@@ -228,6 +232,9 @@ func GetNodeSpec() error {
 		}
 
 		node.SetLabels(n.Labels)
+
+		// K8s Node IP is used by BPF NodePort devices auto-detection
+		node.SetK8sNodeIP(n.GetK8sNodeIP())
 	} else {
 		// if node resource could not be received, fail if
 		// PodCIDR requirement has been requested

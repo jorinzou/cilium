@@ -44,6 +44,9 @@ var (
 	ipv4AllocRange      *cidr.CIDR
 	ipv6AllocRange      *cidr.CIDR
 
+	// k8s Node IP (either InternalIP or ExternalIP or nil; the former is prefered)
+	k8sNodeIP net.IP
+
 	ipsecKeyIdentity uint8
 )
 
@@ -454,4 +457,14 @@ func SetIPsecKeyIdentity(id uint8) {
 // GetIPsecKeyIdentity returns the IPsec key identity of the node
 func GetIPsecKeyIdentity() uint8 {
 	return ipsecKeyIdentity
+}
+
+// GetK8sNodeIPs returns k8s Node IP addr.
+func GetK8sNodeIP() net.IP {
+	return k8sNodeIP
+}
+
+// SetK8sNodeIP sets k8s Node IP addr.
+func SetK8sNodeIP(ip net.IP) {
+	k8sNodeIP = ip
 }
