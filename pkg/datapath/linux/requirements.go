@@ -176,10 +176,9 @@ func CheckMinRequirements() {
 	if !option.Config.DryMode {
 		probeManager := probes.NewProbeManager()
 		if err := probeManager.SystemConfigProbes(); err != nil {
-			switch err {
-			case probes.ErrKernelConfigNotFound:
+			if err == probes.ErrKernelConfigNotFound {
 				log.WithError(err).Info("BPF system config check: NOT OK.")
-			default:
+			} else {
 				log.WithError(err).Fatal("BPF system config check: NOT OK.")
 			}
 		}
