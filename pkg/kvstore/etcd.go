@@ -193,7 +193,7 @@ func (e *etcdModule) newClient(ctx context.Context, opts *ExtraOptions) (Backend
 	for {
 		// connectEtcdClient will close errChan when the connection attempt has
 		// been successful
-		backend, err := connectEtcdClient(e.config, configPath, errChan, rateLimit, opts)
+		backend, err := connectEtcdClient(ctx, e.config, configPath, errChan, rateLimit, opts)
 		switch {
 		case os.IsNotExist(err):
 			log.WithError(err).Info("Waiting for all etcd configuration files to be available")
@@ -434,7 +434,7 @@ func (e *etcdClient) Disconnected() <-chan struct{} {
 	return ch
 }
 
-func (e *etcdClient) renewSession() error {
+func (e *etcdClient) renewSession(ctx context.Context) error {
 	<-e.firstSession
 	<-e.session.Done()
 	// This is an attempt to avoid concurrent access of a session that was
@@ -455,7 +455,7 @@ func (e *etcdClient) renewSession() error {
 
 	e.getLogger().WithField(fieldSession, newSession).Debug("Renewing etcd session")
 
-	if err := e.checkMinVersion(); err != nil {
+	if err := e.checkMinVersion(ctx); err != nil {
 		return err
 	}
 
@@ -486,7 +486,7 @@ func (e *etcdClient) renewLockSession() error {
 	return nil
 }
 
-func connectEtcdClient(config *client.Config, cfgPath string, errChan chan error, rateLimit int, opts *ExtraOptions) (BackendOperations, error) {
+func connectEtcdClient(ctx context.Context, config *client.Config, cfgPath string, errChan chan error, rateLimit int, opts *ExtraOptions) (BackendOperations, error) {
 	if cfgPath != "" {
 		cfg, err := newConfig(cfgPath)
 		if err != nil {
@@ -574,17 +574,17 @@ func connectEtcdClient(config *client.Config, cfgPath string, errChan chan error
 		ec.getLogger().Debugf("Session received")
 		close(ec.firstSession)
 
-		if err := ec.checkMinVersion(); err != nil {
+		if err := ec.checkMinVersion(ctx); err != nil {
 			errChan <- fmt.Errorf("unable to validate etcd version: %s", err)
 		}
 	}()
 
-	go ec.statusChecker(context.TODO())
+	go ec.statusChecker(ctx)
 
 	ec.controllers.UpdateController("kvstore-etcd-session-renew",
 		controller.ControllerParams{
 			DoFunc: func(ctx context.Context) error {
-				return ec.renewSession()
+				return ec.renewSession(ctx)
 			},
 			RunInterval: time.Duration(10) * time.Millisecond,
 		},
@@ -602,8 +602,8 @@ func connectEtcdClient(config *client.Config, cfgPath string, errChan chan error
 	return ec, nil
 }
 
-func getEPVersion(c client.Maintenance, etcdEP string, timeout time.Duration) (go_version.Version, error) {
-	ctxTimeout, cancel := context.WithTimeout(context.TODO(), timeout)
+func getEPVersion(ctx context.Context, c client.Maintenance, etcdEP string, timeout time.Duration) (go_version.Version, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	sr, err := c.Status(ctxTimeout, etcdEP)
 	if err != nil {
@@ -619,11 +619,11 @@ func getEPVersion(c client.Maintenance, etcdEP string, timeout time.Duration) (g
 // checkMinVersion checks the minimal version running on etcd cluster.  This
 // function should be run whenever the etcd client is connected for the first
 // time and whenever the session is renewed.
-func (e *etcdClient) checkMinVersion() error {
+func (e *etcdClient) checkMinVersion(ctx context.Context) error {
 	eps := e.client.Endpoints()
 
 	for _, ep := range eps {
-		v, err := getEPVersion(e.client.Maintenance, ep, versionCheckTimeout)
+		v, err := getEPVersion(ctx, e.client.Maintenance, ep, versionCheckTimeout)
 		if err != nil {
 			e.getLogger().WithError(Hint(err)).WithField(fieldEtcdEndpoint, ep).
 				Warn("Unable to verify version of etcd endpoint")
