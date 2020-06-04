@@ -370,8 +370,11 @@ data:
 {{- if .Values.global.nodePort.range }}
   node-port-range: {{ .Values.global.nodePort.range | quote }}
 {{- end }}
+{{- if .Values.global.nodePort.devices }}
+  devices: {{ join " " .Values.global.nodePort.devices | quote }}
+{{- end }}
 {{- if .Values.global.nodePort.device }}
-  device: {{ join " " .Values.global.nodePort.device | quote }}
+  device: {{ .Values.global.nodePort.device | quote }}
 {{- end }}
 {{- if .Values.global.nodePort.directRoutingDevice }}
   direct-routing-device: {{ .Values.global.nodePort.directRoutingDevice | quote }}

@@ -1132,7 +1132,7 @@ var _ = Describe("K8sServicesTest", func() {
 					SkipItIf(func() bool { return helpers.GetCurrentIntegration() != "" },
 						"Tests with secondary NodePort device", func() {
 							DeployCiliumOptionsAndDNS(kubectl, ciliumFilename, map[string]string{
-								"global.nodePort.device": fmt.Sprintf(`'{%s,%s}'`, privateIface, helpers.SecondaryIface),
+								"global.nodePort.devices": fmt.Sprintf(`'{%s,%s}'`, privateIface, helpers.SecondaryIface),
 							})
 
 							testNodePort(true, true, helpers.ExistNodeWithoutCilium())
@@ -1185,7 +1185,7 @@ var _ = Describe("K8sServicesTest", func() {
 								"global.tunnel":               "disabled",
 								"global.autoDirectNodeRoutes": "true",
 								"global.nodePort.mode":        "snat",
-								"global.nodePort.device":      fmt.Sprintf(`'{%s,%s}'`, privateIface, helpers.SecondaryIface),
+								"global.nodePort.devices":     fmt.Sprintf(`'{%s,%s}'`, privateIface, helpers.SecondaryIface),
 							})
 
 							testNodePort(true, true, helpers.ExistNodeWithoutCilium())

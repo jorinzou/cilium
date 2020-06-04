@@ -114,8 +114,11 @@ const (
 	// DebugVerbose is the argument enables verbose log message for particular subsystems
 	DebugVerbose = "debug-verbose"
 
-	// List of devices facing cluster/external network for attaching bpf_host
+	// Device facing cluster/external network for attaching bpf_host
 	Device = "device"
+
+	// Devices facing cluster/external network for attaching bpf_host
+	Devices = "devices"
 
 	// DirectRoutingDevice is the name of a device used to connect nodes in
 	// direct routing mode (only required by BPF NodePort)
@@ -2151,7 +2154,6 @@ func (c *DaemonConfig) Populate() {
 	c.DatapathMode = viper.GetString(DatapathMode)
 	c.Debug = viper.GetBool(DebugArg)
 	c.DebugVerbose = viper.GetStringSlice(DebugVerbose)
-	c.Devices = viper.GetStringSlice(Device)
 	c.DirectRoutingDevice = viper.GetString(DirectRoutingDevice)
 	c.DisableConntrack = viper.GetBool(DisableConntrack)
 	c.EnableIPv4 = getIPv4Enabled()
@@ -2274,6 +2276,8 @@ func (c *DaemonConfig) Populate() {
 	c.PolicyAuditMode = viper.GetBool(PolicyAuditModeArg)
 	c.EnableIPv4FragmentsTracking = viper.GetBool(EnableIPv4FragmentsTrackingName)
 	c.FragmentsMapEntries = viper.GetInt(FragmentsMapEntriesName)
+
+	c.populateDevices()
 
 	if nativeCIDR := viper.GetString(IPv4NativeRoutingCIDR); nativeCIDR != "" {
 		c.ipv4NativeRoutingCIDR = cidr.MustParseCIDR(nativeCIDR)
@@ -2454,6 +2458,26 @@ func (c *DaemonConfig) Populate() {
 	c.SelectiveRegeneration = viper.GetBool(SelectiveRegeneration)
 	c.SkipCRDCreation = viper.GetBool(SkipCRDCreation)
 	c.DisableCNPStatusUpdates = viper.GetBool(DisableCNPStatusUpdates)
+}
+
+func (c *DaemonConfig) populateDevices() {
+	c.Devices = viper.GetStringSlice(Devices)
+	if device := viper.GetString(Device); device != "" {
+		if c.Devices == nil {
+			c.Devices = []string{device}
+		} else {
+			found := false
+			for _, d := range c.Devices {
+				if d == device {
+					found = true
+					break
+				}
+			}
+			if !found {
+				c.Devices = append(c.Devices, device)
+			}
+		}
+	}
 }
 
 func (c *DaemonConfig) populateNodePortRange() error {
