@@ -338,6 +338,10 @@ data:
   native-routing-cidr: {{ .Values.global.nativeRoutingCIDR }}
 {{- end }}
 
+{{- if .Values.global.fragmentTracking }}
+  enable-ipv4-fragment-tracking: {{ .Values.global.fragmentTracking | quote }}
+{{- end}}
+
 {{- if .Values.global.hostFirewall }}
   enable-host-firewall: {{ .Values.global.hostFirewall | quote }}
 {{- end}}
