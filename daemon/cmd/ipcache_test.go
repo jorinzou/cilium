@@ -22,7 +22,11 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (s *DaemonSuite) TestContainsSubnet(c *C) {
+type IPCacheSuite struct{}
+
+var _ = Suite(&IPCacheSuite{})
+
+func (s *IPCacheSuite) TestContainsSubnet(c *C) {
 	type args struct {
 		outer, inner string
 	}

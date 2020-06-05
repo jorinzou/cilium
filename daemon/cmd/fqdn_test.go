@@ -35,10 +35,14 @@ func makeIPs(count uint32) []net.IP {
 	return ips
 }
 
+type FQDNSuite struct{}
+
+var _ = Suite(&FQDNSuite{})
+
 // BenchmarkFqdnCache tests how slow a full dump of DNSHistory from a number of
 // endpoints is. Each endpoints has 1000 DNS lookups, each with 10 IPs. The
 // dump iterates over all endpoints, lookups, and IPs.
-func (ds *DaemonSuite) BenchmarkFqdnCache(c *C) {
+func (ds *FQDNSuite) BenchmarkFqdnCache(c *C) {
 	c.StopTimer()
 
 	endpoints := make([]*endpoint.Endpoint, 0, c.N)

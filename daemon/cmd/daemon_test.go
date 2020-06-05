@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !privileged_tests
+// +build linux,privileged_tests
 
 package cmd
 
@@ -42,7 +42,7 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-// Hook up gocheck into the "go test" runner.
+// Hook up gocheck into the "go test" runner for privileged daemon/cmd tests.
 func Test(t *testing.T) { TestingT(t) }
 
 type DaemonSuite struct {

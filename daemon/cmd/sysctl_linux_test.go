@@ -17,21 +17,14 @@
 package cmd
 
 import (
-	"testing"
-
 	. "gopkg.in/check.v1"
 )
 
-// Hook up gocheck into the "go test" runner.
-func Test(t *testing.T) {
-	TestingT(t)
-}
+type SysctlSuite struct{}
 
-type DaemonPrivilegedSuite struct{}
+var _ = Suite(&SysctlSuite{})
 
-var _ = Suite(&DaemonPrivilegedSuite{})
-
-func (s *DaemonPrivilegedSuite) TestEnableIPForwarding(c *C) {
+func (s *SysctlSuite) TestEnableIPForwarding(c *C) {
 	err := enableIPForwarding()
 	c.Assert(err, IsNil)
 }

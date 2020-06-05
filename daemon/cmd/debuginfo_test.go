@@ -18,11 +18,19 @@ package cmd
 
 import (
 	"os"
+	"testing"
 
 	. "gopkg.in/check.v1"
 )
 
-func (s *DaemonSuite) TestMemoryMap(c *C) {
+// Hook up gocheck into the "go test" runner for unprivileged daemon/cmd tests.
+func Test(t *testing.T) { TestingT(t) }
+
+type DebugInfoSuite struct{}
+
+var _ = Suite(&DebugInfoSuite{})
+
+func (s *DebugInfoSuite) TestMemoryMap(c *C) {
 	pid := os.Getpid()
 	m := memoryMap(pid)
 	c.Assert(m, Not(Equals), "")
