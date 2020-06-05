@@ -8,10 +8,6 @@
  * to help relax the verifier to avoid reaching complexity limits on older
  * kernels.
  */
-static __always_inline void relax_verifier(void)
-{
-	int foo = 0;
-	csum_diff(0, 0, &foo, 1, 0);
-}
+static __always_inline void relax_verifier(void) {}
 
 #endif /* __BPF_VERIFIER__ */
